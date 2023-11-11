@@ -1,6 +1,8 @@
 
 
+import edu.princeton.cs.algs4.Picture;
 import edu.princeton.cs.algs4.Point2D;
+import edu.princeton.cs.algs4.StdDraw;
 
 import javax.swing.*;
 import java.awt.*;
@@ -10,7 +12,7 @@ import java.util.Scanner;
 
 
 public class MinefieldGUI extends MouseAdapter {
-    ImageIcon flag = new ImageIcon("flag.png");
+    Picture flag = new Picture("flag.png");
     boolean game = true;
 
     private class Node{
@@ -178,7 +180,9 @@ public class MinefieldGUI extends MouseAdapter {
                     }
                     else if(stat.toLowerCase().startsWith("f")){
                         arr.get(XYto1D(y, x)).getLabel().setText("  F");
-                        arr.get(XYto1D(y, x)).getLabel().setBackground(Color.RED);
+                        arr.get(XYto1D(y, x)).getLabel().setBackground(tan);
+                        arr.get(XYto1D(y, x)).getLabel().setForeground(Color.red);
+
                         frame.repaint();
                     }
                     else if (stat.equals("0")) {
@@ -187,6 +191,17 @@ public class MinefieldGUI extends MouseAdapter {
                     }
                     else  {
                         arr.get(XYto1D(y, x)).getLabel().setText("   "+stat);
+                        switch(Integer.parseInt(stat)){
+                            case 1,4,7:
+                                arr.get(XYto1D(y, x)).getLabel().setForeground(Color.magenta);
+                                break;
+                            case 2,5,8:
+                                arr.get(XYto1D(y, x)).getLabel().setForeground(Color.red);
+                                break;
+                            case 3,6:
+                                arr.get(XYto1D(y, x)).getLabel().setForeground(Color.blue);
+                                break;
+                        }
                         arr.get(XYto1D(y, x)).getLabel().setBackground(tan);
                         frame.repaint();
 
