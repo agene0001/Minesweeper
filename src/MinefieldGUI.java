@@ -46,7 +46,6 @@ public class MinefieldGUI extends MouseAdapter {
             label = lab;
             point = poin;
 
-
         }
 
     }
@@ -54,6 +53,7 @@ public class MinefieldGUI extends MouseAdapter {
     private int count = 0;
     private ArrayList<Node> arr;
     private Minefield minefield;
+//    row/col len
     int rc;
     int flags;
     int size;
@@ -212,6 +212,12 @@ public class MinefieldGUI extends MouseAdapter {
                         frame.repaint();
 
                     }
+                }
+                else{
+
+                       arr.get(XYto1D(y, x)).getLabel().setText("  ");
+                        arr.get(XYto1D(y, x)).getLabel().setBackground(Color.green);
+                        frame.repaint();
                 }
             }
         }
