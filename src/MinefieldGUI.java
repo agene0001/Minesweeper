@@ -1,14 +1,20 @@
 
 
-import edu.princeton.cs.algs4.Picture;
-import edu.princeton.cs.algs4.Point2D;
-import edu.princeton.cs.algs4.StdDraw;
-
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.GridLayout;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Scanner;
+
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+
+import edu.princeton.cs.algs4.Picture;
+import edu.princeton.cs.algs4.Point2D;
 
 
 public class MinefieldGUI extends MouseAdapter {
