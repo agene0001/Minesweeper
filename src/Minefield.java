@@ -22,8 +22,8 @@ public class Minefield {
      * @param columns    Number of columns.
      * @param flags      Number of flags, should be equal to mines
      */
-    int rows;
-    int cols;
+    static int rows;
+    static int cols;
     int flags;
     Cell[] board;
 
@@ -125,10 +125,14 @@ public class Minefield {
         }
     }
 
-    private int XYto1D(int x, int y) {
+    public int XYto1D(int x, int y) {
         return (x * cols) + y;
     }
-
+    private int[] D1toXY(int d){
+        int y = d%cols;
+        int x = d/cols;
+        return new int[]{x,y};
+    }
     /**
      * createMines
      *
@@ -161,14 +165,15 @@ public class Minefield {
     }
 
     /**
-     * guess
+     * Updates the status of a cell on the game board based on user input.
      *
-     * @param x    The x value the user entered.
-     * @param y    The y value the user entered.
-     * @param flag A boolean value that allows the user to place a flag on the corresponding square.
-     * @return boolean Return false if guess did not hit mine or if flag was placed, true if mine found.
+     * @param x    The x coordinate of the cell.
+     * @param y    The y coordinate of the cell.
+     * @param flag True if the user wants to flag/unflag the cell, false otherwise.
+     * @return True if the user guessed a mine, false otherwise.
      */
     public boolean guess(int x, int y, boolean flag) {
+//        System.out.println("X val: "+x+" Y val: "+y);
         if (x <= cols && y <= rows && x >= 0 && y >= 0) {
             if (flag) {
                 if (flags > 0) {
@@ -224,6 +229,7 @@ public class Minefield {
      *
      * @param x The x value the user entered.
      * @param y The y value the user entered.
+     *
      */
     public void revealZeroes(int x, int y) {
         Stack<int[]> s = new Stack<>();
@@ -516,17 +522,17 @@ public class Minefield {
      *
      * @return String The string that is returned only has the squares that has been revealed to the user or that the user has guessed.
      */
-    public String toString() {
-        String rev = "";
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < cols; j++) {
-                if (board[XYto1D(i, j)].getRevealed()) {
-                    rev += board[XYto1D(i, j)].getStatus();
-                } else
-                    rev += "- ";
-            }
-            rev += "\n";
-        }
-        return rev;
-    }
+//    public String toString() {
+//        String rev = "";
+//        for (int i = 0; i < rows; i++) {
+//            for (int j = 0; j < cols; j++) {
+//                if (board[XYto1D(i, j)].getRevealed()) {
+//                    rev += board[XYto1D(i, j)].getStatus();
+//                } else
+//                    rev += "- ";
+//            }
+//            rev += "\n";
+//        }
+//        return rev;
+//    }
 }

@@ -50,9 +50,9 @@ public class MinefieldGUI extends MouseAdapter {
 
     }
 
-    private int count = 0;
+    int count = 0;
     private ArrayList<Node> arr;
-    private Minefield minefield;
+    Minefield minefield;
 //    row/col len
     int rc;
     int flags;
@@ -81,7 +81,7 @@ public class MinefieldGUI extends MouseAdapter {
         lab1.setText(String.valueOf(minefield.flags));
         panel3.add(lab1);
         panel.addMouseListener(this);
-        panel2.add(new JLabel("MineSweeper"));
+        panel2.add(new JLabel("Minesweeper"));
         panel.setSize(rc*25,rc*25);
         panel.setLayout(new GridLayout(rc, rc));
         size = rc * rc;
@@ -100,6 +100,12 @@ public class MinefieldGUI extends MouseAdapter {
 
     }
 
+    /**
+     * Sets up the game board by creating JLabel buttons and adding them to the given JPanel.
+     * Each button is assigned a background color based on its position on the board.
+     *
+     * @param panel the JPanel to add the buttons to
+     */
     public void setUp(JPanel panel){
         for (int y = 0; y < rc; y++) {
             for (int x = 0; x < rc; x++) {
@@ -126,10 +132,29 @@ public class MinefieldGUI extends MouseAdapter {
     }
 
 
+    /**
+     * Prompts the user to select a difficulty level and start the game.
+     * The user's input is read from the console using a Scanner object.
+     * Based on the selected difficulty level, a Minefield object is created
+     * with the corresponding dimensions and number of mines.
+     *
+     * Available difficulty levels:
+     *  - Easy: 5x5 grid with 5 mines
+     *  - Medium: 10x10 grid with 20 mines
+     *  - Hard: 21x21 grid with 100 mines
+     *  - Nuts: 25x25 grid with 125 mines
+     *  - Insane: 31x31 grid with 200 mines
+     *
+     * After selecting the difficulty level, the user is prompted to
+     * enable or disable debug mode. If debug mode is enabled, the Minefield
+     * object will display the location of the mines.
+     *
+     * This method does not return any value.
+     */
     private void start() {
         Scanner s = new Scanner(System.in);
         while (true) {
-            System.out.println("What difficulty would you like. (Easy,Medium,Hard,Nuts,Insane)");
+            System.out.println("What difficulty would you like. (Easy, Medium,Hard,Nuts,Insane)");
             String difficult = s.nextLine();
             if (difficult.toLowerCase().startsWith("e")) {
                 minefield = new Minefield(5, 5, 5);
@@ -167,10 +192,20 @@ public class MinefieldGUI extends MouseAdapter {
 
     }
 
+    /**
+     * Converts the x and y coordinates of a two-dimensional grid to a one-dimensional index.
+     *
+     * @param x the x-coordinate of the element in the grid
+     * @param y the y-coordinate of the element in the grid
+     * @return the one-dimensional index representing the element in the grid
+     */
     private int XYto1D(int x, int y) {
         return (x * rc) + y;
     }
 
+    /**
+     * Updates the game board by evaluating the status of each cell and updating the corresponding JLabel button.
+     */
     public void eval() {
         for (int y = 0; y < rc; y++) {
             for (int x = 0; x < rc; x++) {
@@ -227,56 +262,65 @@ public class MinefieldGUI extends MouseAdapter {
         return game;
     }
 
-    @Override
-    public void mouseClicked(MouseEvent me){
-        int x = me.getX()/25;
-        int y = me.getY()/25;
-        if(me.getButton()==MouseEvent.BUTTON1){
-            //--left click
-            if(count==0){
-                minefield.createMines(y,x,flags);
-                minefield.evaluateField();
-                minefield.revealStart(y,x);
-                count++;
+ public void doClick(int x, int y, boolean rightClick) {
+    if(rightClick){
+        // process right click
+        if(count==0){
+            minefield.createMines(y,x,flags);
+            minefield.evaluateField();
+            minefield.revealStart(y,x);
+            count++;
+            eval();
+            this.minefield.printMinefield();
+        }
+        else {
+            lab1.setText(String.valueOf(minefield.flags));
+            minefield.guess(y,x,true);
+            lab1.setText(String.valueOf(minefield.flags));
+            eval();
+            this.minefield.printMinefield();
+        }
+    }
+    else {
+        if(count==0){
+            // process left click
+            minefield.createMines(y,x,flags);
+            minefield.evaluateField();
+            minefield.revealStart(y,x);
+            count++;
+            eval();
+            this.minefield.printMinefield();
+        }
+        else{
+            System.out.printf("(%d,%d)",x,y);
+            if(!minefield.guess(y,x,false)) {
                 eval();
                 this.minefield.printMinefield();
             }
             else{
-                System.out.printf("(%d,%d)",x,y);
-                if(!minefield.guess(y,x,false)) {
-                    eval();
-                    this.minefield.printMinefield();
-                }
-                else{
-                    System.out.println("Game over");
-                    game = false;
-                }
+                System.out.println("Game over");
+                game = false;
+                frame.dispose();
             }
         }
-        if(me.getButton()==MouseEvent.BUTTON3){
-            System.out.printf("(%d,%d)",x,y);
-            //--right click
-            if(count==0){
-                minefield.createMines(y,x,flags);
-                minefield.evaluateField();
-                minefield.revealStart(y,x);
-                count++;
-                eval();
-                this.minefield.printMinefield();
-            }
-            else {
-                lab1.setText(String.valueOf(minefield.flags));
-                minefield.guess(y,x,true);
-                lab1.setText(String.valueOf(minefield.flags));
-                eval();
-                this.minefield.printMinefield();
-
-            }
-        }
-
     }
+}
 
-
+@Override
+public void mouseClicked(MouseEvent me){
+    int x = me.getX()/25;
+    int y = me.getY()/25;
+    System.out.println(me.getButton());
+    System.out.println(me.isControlDown());
+    // process right click. Since on mac you must also have control down since one mouse
+    if(me.getButton()==MouseEvent.BUTTON1&&me.isControlDown()){
+        doClick(x, y, true);
+    }
+    // process left click
+    else if(me.getButton() == MouseEvent.BUTTON1){
+        doClick(x, y, false);
+    }
+}
 
 
     public static void main(String[] args){
