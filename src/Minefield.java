@@ -1,7 +1,6 @@
 import edu.princeton.cs.algs4.Queue;
 
-import java.util.Stack;
-import java.util.Random;
+import java.util.*;
 
 //agene001
 public class Minefield {
@@ -43,11 +42,31 @@ public class Minefield {
         }
 
     }
+    public Minefield(int rows, int columns, int flags, Set<List<Integer>> mines) {
+        //initzializer
+        this.rows = rows;
+        cols = columns;
+        this.flags = flags;
+
+        board = new Cell[rows * cols + 1];
+        int h2 = (cols * 2);
+        int max = cols * 4;
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < columns; j++) {
+                board[XYto1D(j, i)] = new Cell(false, "0");
+            }
+        }
+        for (List<Integer> mine : mines) {
+            board[XYto1D(mine.get(0),mine.get(1))].setStatus("M");
+        }
+        evaluateField();
+
+    }
 
     /**
-     * evaluateField
-     *
-     * @function When a mine is found in the field, calculate the surrounding 9x9 tiles values. If a mine is found, increase the count for the square.
+     * Updates the surrounding cells' status based on the number of adjacent mines.
+     * For each cell on the board that is a mine, this method checks the adjacent cells
+     * and increments their status by 1 if they are not a mine.
      */
     void evaluateField() {
         //used to keep track of mines surronding
@@ -55,69 +74,21 @@ public class Minefield {
         //goes through all and checks that adjacent pieces are in bounds and mine
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < cols; j++) {
-                if (board[XYto1D(j, i)].getStatus().equalsIgnoreCase("M")) {
-                    if (i + 1 < rows) {
-                        if (j + 1 < cols) {
-                            Cell cell = board[XYto1D(j + 1, i + 1)];
-                            try {
-                                cell.setStatus(String.valueOf(Integer.parseInt(cell.getStatus()) + 1));
-                            } catch (Exception ignored) {
+                if (board[XYto1D(i,j)].getStatus().equalsIgnoreCase("M")) {
+                    // checks surronding mines
+                    for (int isub = i - 1; isub < i + 2; isub++) {
+                        for (int jsub = j - 1; jsub < j + 2; jsub++) {
+                            if (i != isub || j != jsub) {
+                                if (isub < rows && isub >= 0 && jsub < cols && jsub >= 0) {
+                                    Cell cell = board[XYto1D(isub, jsub)];
+                                    try {
+                                        cell.setStatus(String.valueOf(Integer.parseInt(cell.getStatus()) + 1));
+                                    } catch (Exception ignored) {
 
+                                    }
+                                }
+                                ;
                             }
-                        }
-                        if (j - 1 >= 0) {
-                            Cell cell = board[XYto1D(j - 1, i + 1)];
-                            try {
-                                cell.setStatus(String.valueOf(Integer.parseInt(cell.getStatus()) + 1));
-                            } catch (Exception ignored) {
-
-                            }
-                        }
-                        Cell cell = board[XYto1D(j, i + 1)];
-                        try {
-                            cell.setStatus(String.valueOf(Integer.parseInt(cell.getStatus()) + 1));
-                        } catch (Exception ignored) {
-
-                        }
-                    }
-                    if (i - 1 >= 0) {
-                        if (j + 1 < cols) {
-                            Cell cell = board[XYto1D(j + 1, i - 1)];
-                            try {
-                                cell.setStatus(String.valueOf(Integer.parseInt(cell.getStatus()) + 1));
-                            } catch (Exception ignored) {
-
-                            }
-                        }
-                        if (j - 1 >= 0) {
-                            Cell cell = board[XYto1D(j - 1, i - 1)];
-                            try {
-                                cell.setStatus(String.valueOf(Integer.parseInt(cell.getStatus()) + 1));
-                            } catch (Exception ignored) {
-
-                            }
-                        }
-                        Cell cell = board[XYto1D(j, i - 1)];
-                        try {
-                            cell.setStatus(String.valueOf(Integer.parseInt(cell.getStatus()) + 1));
-                        } catch (Exception ignored) {
-
-                        }
-                    }
-                    if (j + 1 < cols) {
-                        Cell cell = board[XYto1D(j + 1, i)];
-                        try {
-                            cell.setStatus(String.valueOf(Integer.parseInt(cell.getStatus()) + 1));
-                        } catch (Exception ignored) {
-
-                        }
-                    }
-                    if (j - 1 >= 0) {
-                        Cell cell = board[XYto1D(j - 1, i)];
-                        try {
-                            cell.setStatus(String.valueOf(Integer.parseInt(cell.getStatus()) + 1));
-                        } catch (Exception ignored) {
-
                         }
                     }
                 }
@@ -125,14 +96,54 @@ public class Minefield {
         }
     }
 
-    public int XYto1D(int x, int y) {
-        return (x * cols) + y;
+    /**
+     * Converts the 2D coordinates (x, y) to a 1D coordinate.
+     *
+     * @param y The y coordinate.
+     * @param x The x coordinate.
+     * @return The corresponding 1D coordinate.
+     */
+    public int XYto1D(int y, int x) {
+        return (y * cols) + x;
     }
-    private int[] D1toXY(int d){
-        int y = d%cols;
-        int x = d/cols;
-        return new int[]{x,y};
+
+    /**
+     * Converts a one-dimensional index to a two-dimensional coordinate (x, y).
+     *
+     * @param d The one-dimensional index.
+     * @return An array containing the x and y coordinates.
+     */
+    private int[] D1toXY(int d) {
+        int y = d % cols;
+        int x = d / cols;
+        return new int[]{x, y};
     }
+
+    /**
+     * Calculates the number of nearby hidden cells.
+     *
+     * @param cell The coordinates of the cell.
+     *             The first element is the x-coordinate and the second element is the y-coordinate.
+     * @return The number of nearby hidden cells.
+     */
+    public int nearbyHidden(int[] cell) {
+        int count = 0;
+        for (int i = cell[0] - 1; i < cell[0] + 2; i++) {
+            for (int j = cell[1] - 1; j < cell[1] + 2; j++) {
+                if (cell[0] != i || cell[1] != j) {
+                    if (0 <= i && i < rows && 0 <= j && j < rows) {
+
+                        if (!getCell(XYto1D(i, j)).getRevealed()) {
+                            count++;
+                        }
+                    }
+                }
+            }
+        }
+        return count;
+
+    }
+
     /**
      * createMines
      *
@@ -140,6 +151,7 @@ public class Minefield {
      * @param y     Start y, avoid placing on this square.
      * @param mines Number of mines to place.
      */
+
     public void createMines(int x, int y, int mines) {
 
         int a;
@@ -152,11 +164,12 @@ public class Minefield {
             //checks if mine is placed on starting coordinate
             if ((a == x && b == y) || (a + 1 == x && b == y) || (a - 1 == x && b == y) || (a + 1 == x && b + 1 == y) || (a + 1 == x && b - 1 == y) || (a - 1 == x && b + 1 == y) || (a - 1 == x && b - 1 == y) || (a == x && b + 1 == y) || (a == x && b - 1 == y)) {
             } else {
-                board[XYto1D(a, b)].setStatus("M");
+                board[XYto1D(b, a)].setStatus("M");
                 mines--;
 
             }
         }
+        evaluateField();
     }
 
 
@@ -206,7 +219,7 @@ public class Minefield {
     /**
      * gameOver
      *
-     * @return boolean Return false if game is not over and squares have yet to be revealed, otheriwse return true.
+     * @return boolean Return false if game is not over and squares have yet to be revealed, otherwise return true.
      */
     public boolean gameOver() {
         for (int i = 0; i < rows; i++) {
@@ -224,138 +237,43 @@ public class Minefield {
     /**
      * revealField
      * <p>
-     * This method should follow the psuedocode given.
+     * This method should follow the pseudocode given.
      * Why might a stack be useful here rather than a queue?
      *
      * @param x The x value the user entered.
      * @param y The y value the user entered.
-     *
      */
     public void revealZeroes(int x, int y) {
-        Stack<int[]> s = new Stack<>();
+//        printMinefield();
+//        printDebugMinefield();
+        Stack<int[]> zeros = new Stack<>();
         int[] t = new int[2];
-        t[0] = x;
-        t[1] = y;
-        s.push(t);
-        while (!s.isEmpty()) {
-            int[] temp = s.pop();
+        t[0] = y;
+        t[1] = x;
+        zeros.push(t);
+        while (!zeros.isEmpty()) {
+            int[] temp = zeros.pop();
+//                        System.out.println("search node is ("+temp[0] + ", " + temp[1]+") : with status "+ board[XYto1D(temp[0], temp[1])].getStatus());
+
             if (board[XYto1D(temp[0], temp[1])].getStatus().equals("0") && !board[XYto1D(temp[0], temp[1])].getRevealed()) {
                 board[XYto1D(temp[0], temp[1])].setRevealed(true);
-                if (temp[1] + 1 < rows) {
-                    if (!board[XYto1D(temp[0], temp[1] + 1)].getStatus().equals("M")) {
-                        if (board[XYto1D(temp[0], temp[1] + 1)].getStatus().equals("0")) {
-                            int[] temp3 = new int[2];
-                            temp3[1] = temp[1] + 1;
-                            temp3[0] = temp[0];
-                            s.push(temp3);
-                        }
-                        else {
+                for (int i = temp[0] - 1; i < temp[0] + 2; i++) {
+                    for (int j = temp[1] - 1; j < temp[1] + 2; j++) {
+                        if (i != temp[0] || j != temp[1]) {
+                            if (i < rows && i >= 0 && j < cols && j >= 0) {
+//                        System.out.println("search node is ("+i + ", " + j+") : with status "+ board[XYto1D(temp[0], temp[1])].getStatus());
 
-                            board[XYto1D(temp[0], temp[1] + 1)].setRevealed(true);
-                        }
-                    }
-                    if (temp[0] + 1 < cols) {
-                        if (!board[XYto1D(temp[0] + 1, temp[1] + 1)].getStatus().equals("M")) {
-                            if (board[XYto1D(temp[0] + 1, temp[1] + 1)].getStatus().equals("0")) {
-                                int[] temp3 = new int[2];
-                                temp3[1] = temp[1] + 1;
-                                temp3[0] = temp[0] + 1;
-                                s.push(temp3);
-                            }
-                            else {
+                                if (!board[XYto1D(i, j)].getStatus().equals("M")) {
+                                    if (board[XYto1D(i, j)].getStatus().equals("0")) {
+                                        zeros.push(new int[]{i, j});
 
-                            board[XYto1D(temp[0] + 1, temp[1] + 1)].setRevealed(true);
+                                    } else {
+                                        revealMines(i, j);
+                                    }
+                                }
                             }
                         }
                     }
-                    if (temp[0] - 1 >= 0) {
-                        if (!board[XYto1D(temp[0] - 1, temp[1] + 1)].getStatus().equals("M")) {
-                            if (board[XYto1D(temp[0] - 1, temp[1] + 1)].getStatus().equals("0")) {
-                                int[] temp3 = new int[2];
-                                temp3[1] = temp[1] + 1;
-                                temp3[0] = temp[0] - 1;
-                                s.push(temp3);
-                            } else {
-
-                                board[XYto1D(temp[0] - 1, temp[1] + 1)].setRevealed(true);
-                            }
-                        }
-                    }
-                    int[] temp3 = new int[2];
-                    temp3[1] = temp[1] + 1;
-                    temp3[0] = temp[0];
-                    s.push(temp3);
-                }
-                if (temp[1] - 1 >= 0) {
-                    if (!board[XYto1D(temp[0], temp[1] - 1)].getStatus().equals("M")) {
-                        if (board[XYto1D(temp[0], temp[1] - 1)].getStatus().equals("0")) {
-                            int[] temp3 = new int[2];
-                            temp3[1] = temp[1] - 1;
-                            temp3[0] = temp[0];
-                            s.push(temp3);
-                        } else {
-
-                            board[XYto1D(temp[0], temp[1] - 1)].setRevealed(true);
-                        }
-                    }
-                    if (temp[0] + 1 < cols) {
-                        if (!board[XYto1D(temp[0] + 1, temp[1] - 1)].getStatus().equals("M")) {
-                            if (board[XYto1D(temp[0] + 1, temp[1] - 1)].getStatus().equals("0")) {
-                                int[] temp3 = new int[2];
-                                temp3[1] = temp[1] - 1;
-                                temp3[0] = temp[0] + 1;
-                                s.push(temp3);
-                            } else {
-
-                                board[XYto1D(temp[0] + 1, temp[1] - 1)].setRevealed(true);
-                            }
-                        }
-                    }
-                    if (temp[0] - 1 >= 0) {
-                        if (!board[XYto1D(temp[0] - 1, temp[1] - 1)].getStatus().equals("M")) {
-                            if (board[XYto1D(temp[0] - 1, temp[1] - 1)].getStatus().equals("0")) {
-                                int[] temp3 = new int[2];
-                                temp3[1] = temp[1] - 1;
-                                temp3[0] = temp[0] - 1;
-                                s.push(temp3);
-                            } else {
-                                board[XYto1D(temp[0] - 1, temp[1] - 1)].setRevealed(true);
-                            }
-                        }
-                    }
-                    int[] temp3 = new int[2];
-                    temp3[1] = temp[1] - 1;
-                    temp3[0] = temp[0];
-                    s.push(temp3);
-                }
-                if (temp[0] + 1 < cols) {
-                    if (!board[XYto1D(temp[0] + 1, temp[1])].getStatus().equals("M")) {
-                        if (board[XYto1D(temp[0] + 1, temp[1])].getStatus().equals("0")) {
-
-                            int[] temp3 = new int[2];
-                            temp3[1] = temp[1];
-                            temp3[0] = temp[0] + 1;
-                            s.push(temp3);
-                        }
-                        else {
-                            board[XYto1D(temp[0] + 1, temp[1])].setRevealed(true);
-                        }
-                    }
-
-                }
-                if (temp[0] - 1 >= 0) {
-                    if (!board[XYto1D(temp[0] - 1, temp[1])].getStatus().equals("M")) {
-                        if (board[XYto1D(temp[0] - 1, temp[1])].getStatus().equals("0")) {
-                            int[] temp4 = new int[2];
-                            temp4[1] = temp[1];
-                            temp4[0] = temp[0] - 1;
-                            s.push(temp4);
-                        }
-                        else {
-                            board[XYto1D(temp[0] - 1, temp[1])].setRevealed(true);
-                        }
-                    }
-
                 }
             }
 
@@ -378,68 +296,32 @@ public class Minefield {
         t[0] = y;
         t[1] = x;
         queue.enqueue(t);
+
         //System.out.println(num);
         //continues until length is 0
         while (!queue.isEmpty()) {
             int[] check = queue.dequeue();
-            if (!board[XYto1D(check[1], check[0])].getStatus().equalsIgnoreCase("M")) {
+            if (!board[XYto1D(check[1], check[0])].getStatus().equalsIgnoreCase("M") && !board[XYto1D(check[1], check[0])].getRevealed()) {
+
                 // if zero reveal zeros
-                if (board[XYto1D(check[1], check[0])].getStatus().equals("0") && !board[XYto1D(check[1], check[0])].getRevealed()) {
-                    this.revealZeroes(check[1], check[0]);
+                if (!board[XYto1D(check[1], check[0])].getStatus().equals("0")) {
+//                    this.revealZeroes(check[1], check[0]);
+                    board[XYto1D(check[1], check[0])].setRevealed(true);
                     int[] add = new int[2];
                     add[0] = check[0];
                     add[1] = check[1];
                     queue.enqueue(add);
-                    board[XYto1D(check[1], check[0])].setRevealed(true);
                 } else {
-                    //add surronding
-                    if (check[0] + 1 < rows) {
-                        if (check[1] + 1 < cols) {
-                            int[] add = new int[2];
-                            add[0] = check[0] + 1;
-                            add[1] = check[1] + 1;
-                            queue.enqueue(add);
+                    for (int i = check[0] - 1; i < check[0] + 2; i++) {
+                        for (int j = check[1] - 1; j < check[1] + 2; j++) {
+                            if (i != check[0] || j != check[1]) {
+                                if (i < rows && i >= 0 && j < cols && j >= 0) {
+
+                                    queue.enqueue(new int[]{i, j});
+
+                                }
+                            }
                         }
-                        if (check[1] - 1 >= 0) {
-                            int[] add12 = new int[2];
-                            add12[0] = check[0] + 1;
-                            add12[1] = check[1] - 1;
-                            queue.enqueue(add12);
-                        }
-                        int[] add13 = new int[2];
-                        add13[0] = check[0] + 1;
-                        add13[1] = check[1];
-                        queue.enqueue(add13);
-                    }
-                    if (check[0] - 1 >= 0) {
-                        if (check[1] + 1 < cols) {
-                            int[] add = new int[2];
-                            add[0] = check[0] - 1;
-                            add[1] = check[1] + 1;
-                            queue.enqueue(add);
-                        }
-                        if (check[1] - 1 >= 0) {
-                            int[] add = new int[2];
-                            add[0] = check[0] - 1;
-                            add[1] = check[1] - 1;
-                            queue.enqueue(add);
-                        }
-                        int[] add5 = new int[2];
-                        add5[0] = check[0] - 1;
-                        add5[1] = check[1];
-                        queue.enqueue(add5);
-                    }
-                    if (check[1] + 1 < cols) {
-                        int[] add6 = new int[2];
-                        add6[0] = check[0];
-                        add6[1] = check[1] + 1;
-                        queue.enqueue(add6);
-                    }
-                    if (check[1] - 1 >= 0) {
-                        int[] add10 = new int[2];
-                        add10[0] = check[0];
-                        add10[1] = check[1] - 1;
-                        queue.enqueue(add10);
                     }
                 }
 
@@ -448,7 +330,7 @@ public class Minefield {
 
             //break if mine
             else
-                break;
+                continue;
 
         }
     }
@@ -470,7 +352,9 @@ public class Minefield {
      * @param y The y value the user entered.
      */
     public void revealStart(int x, int y) {
-        this.revealMines(x, y);
+        this.revealZeroes(x, y);
+
+//        this.revealZeroes(x, y);
     }
 
     /**
@@ -511,6 +395,43 @@ public class Minefield {
                         System.out.print(ANSI_GREEN + " " + board[XYto1D(i, j)].getStatus() + "       " + ANSI_GREY_BG);
                     else System.out.print(" " + board[XYto1D(i, j)].getStatus() + "       " + ANSI_GREY_BG);
                 } else System.out.print(" -       ");
+            }
+            System.out.println();
+            System.out.println();
+        }
+    }
+
+    public void printDebugMinefield() {
+        for (int i = 0; i < rows; i++) {
+            if (i < 10) {
+                if (i == rows - 1) System.out.println("  " + i);
+                else System.out.print("   " + i + "     ");
+            } else {
+                if (i == rows - 1) System.out.println("  " + i);
+                else System.out.print("   " + i + "    ");
+
+            }
+        }
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                if (j == 0) {
+                    if (i < 10) System.out.print(" " + i + " ");
+                    else System.out.print(i + " ");
+                }
+                if (board[XYto1D(i, j)].getStatus().equals("1"))
+                    System.out.print(ANSI_RED + " " + board[XYto1D(i, j)].getStatus() + "       " + ANSI_GREY_BG);
+                else if (board[XYto1D(i, j)].getStatus().equals("2"))
+                    System.out.print(ANSI_YELLOW + " " + board[XYto1D(i, j)].getStatus() + "       " + ANSI_GREY_BG);
+                else if (board[XYto1D(i, j)].getStatus().equals("3"))
+                    System.out.print(ANSI_BLUE_BRIGHT + " " + board[XYto1D(i, j)].getStatus() + "       " + ANSI_GREY_BG);
+                else if (board[XYto1D(i, j)].getStatus().equals("4"))
+                    System.out.print(ANSI_RED_BRIGHT + " " + board[XYto1D(i, j)].getStatus() + "       " + ANSI_GREY_BG);
+                else if (board[XYto1D(i, j)].getStatus().equals("5"))
+                    System.out.print(ANSI_BLUE + " " + board[XYto1D(i, j)].getStatus() + "       " + ANSI_GREY_BG);
+                else if (board[XYto1D(i, j)].getStatus().equals("6"))
+                    System.out.print(ANSI_GREEN + " " + board[XYto1D(i, j)].getStatus() + "       " + ANSI_GREY_BG);
+                else System.out.print(" " + board[XYto1D(i, j)].getStatus() + "       " + ANSI_GREY_BG);
+//                } else System.out.print(" -       ");
             }
             System.out.println();
             System.out.println();
