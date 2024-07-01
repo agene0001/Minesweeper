@@ -52,6 +52,7 @@ public class MinefieldGUI extends MouseAdapter {
     ArrayList<List<Integer>> flagged = new ArrayList<>();
 
     int count = 0;
+    int unopened;
     private ArrayList<Node> arr;
     Minefield minefield;
     //    row/col len
@@ -62,12 +63,13 @@ public class MinefieldGUI extends MouseAdapter {
     Color tan = new Color(210, 180, 140);
 
     JFrame frame;
+    JPanel panel;
     JPanel panel3 = new JPanel();
     JLabel lab = new JLabel("Mines:");
-    JLabel lab1 = new JLabel();
+    JLabel flagsLabel = new JLabel();
     JButton ai = new JButton("AI Move");
+    JButton reset = new JButton("Reset");
     Ai solver;
-    HashSet<List<Integer>> movesMade = new HashSet();
 
     public MinefieldGUI() {
 
@@ -84,13 +86,14 @@ public class MinefieldGUI extends MouseAdapter {
         frame = new JFrame();
         frame.setLayout(new BorderLayout());
         frame.addMouseListener(this);
-        JPanel panel = new JPanel();
+         panel = new JPanel();
         JPanel panel2 = new JPanel();
         panel2.setSize(new Dimension(40, 40));
         panel3.add(lab);
-        lab1.setText(String.valueOf(minefield.flags));
-        panel3.add(lab1);
+        flagsLabel.setText(String.valueOf(minefield.flags));
+        panel3.add(flagsLabel);
         panel3.add(ai);
+        panel3.add(reset);
         panel.addMouseListener(this);
         panel2.add(new JLabel("Minesweeper"));
         panel.setSize(rc * 25, rc * 25);
@@ -105,6 +108,12 @@ public class MinefieldGUI extends MouseAdapter {
         //frame.pack();
 
 //        frame.add(ai, BorderLayout.SOUTH);
+        reset.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                resetGameState();
+            }
+        });
         ai.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -119,19 +128,70 @@ public class MinefieldGUI extends MouseAdapter {
 
     }
 
+    public void resetGameState() {
+        frame.dispose();
+        panel3.removeAll();
+        // reset variable values and update GUI
+        // consider also calling start() method again to restart the game
+
+
+        start();
+//        rc = 6;
+//
+//        flags = 20;
+        minefield = new Minefield(rc, rc, flags);
+        solver = new Ai(rc, rc);
+//        rc = 10;
+//        minefield = new Minefield(20, 20, 40);
+//        rc = 20;
+        //flags = 40;
+        frame = new JFrame();
+        count = 0;
+        frame.setLayout(new BorderLayout());
+        frame.addMouseListener(this);
+        panel = new JPanel();
+        JPanel panel2 = new JPanel();
+        panel2.setSize(new Dimension(40, 40));
+        flagged = new ArrayList<>();
+        unopened = 0;
+        panel3.add(lab);
+        flagsLabel.setText(String.valueOf(minefield.flags));
+        panel3.add(flagsLabel);
+        panel3.add(ai);
+        panel3.add(reset);
+        panel.addMouseListener(this);
+        panel2.add(new JLabel("Minesweeper"));
+        panel.setSize(rc * 25, rc * 25);
+        panel.setLayout(new GridLayout(rc, rc));
+        size = rc * rc;
+        arr = new ArrayList<Node>(rc * rc);
+        setUp(panel);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setTitle("Our MinefieldGUI");
+        frame.add(panel2, BorderLayout.NORTH);
+        frame.add(panel3, BorderLayout.CENTER);
+        //frame.pack();
+
+//        frame.add(ai, BorderLayout.SOUTH);
+
+        frame.add(panel, BorderLayout.SOUTH);
+        frame.pack();
+        frame.setVisible(true);
+        frame.setResizable(false);
+
+
+    }
+//    public void setup()
+
     public MinefieldGUI(int rows, int flags, Set<List<Integer>> mines) {
 
-//        start();
+        start();
         rc = rows;
         count = 1;
 
         this.flags = flags;
         minefield = new Minefield(rc, rc, flags, mines);
         solver = new Ai(rc, rc);
-//        rc = 10;
-//        minefield = new Minefield(20, 20, 40);
-//        rc = 20;
-        //flags = 40;
         frame = new JFrame();
         frame.setLayout(new BorderLayout());
         frame.addMouseListener(this);
@@ -139,8 +199,8 @@ public class MinefieldGUI extends MouseAdapter {
         JPanel panel2 = new JPanel();
         panel2.setSize(new Dimension(40, 40));
         panel3.add(lab);
-        lab1.setText(String.valueOf(minefield.flags));
-        panel3.add(lab1);
+        flagsLabel.setText(String.valueOf(minefield.flags));
+        panel3.add(flagsLabel);
         panel3.add(ai);
         panel.addMouseListener(this);
         panel2.add(new JLabel("Minesweeper"));
@@ -186,19 +246,23 @@ public class MinefieldGUI extends MouseAdapter {
                         flag = true;
                         break;
                     }
-                    if(move == null){
-                        move = solver.makeRandomMove();
+                }
+                    if (move == null) {
+                        move = solver.makeRandomMove(unopened,flags);
                         System.out.println("Minefield ai using random move");
                     }
-                }
+
             } else {
-                move = solver.makeRandomMove();
+                move = solver.makeRandomMove(unopened,flags);
                 System.out.println("Minefield ai using random move");
             }
         }
-
-//            System.out.println("("+move[0]+","+move[1]+")");
-        doClick(move.get(1), move.get(0), flag);
+            if(!minefield.board[minefield.XYto1D(move.get(0),move.get(1))].getRevealed())
+                doClick(move.get(1), move.get(0), flag);
+            else{
+                solverEval(move.get(1),move.get(0),minefield,solver);
+                solve();
+            }
 //        if(!flag) solverEval(move.get(0),move.get(1),minefield,solver);
     }
 
@@ -313,14 +377,8 @@ public class MinefieldGUI extends MouseAdapter {
     /**
      * Updates the game board by evaluating the status of each cell and updating the corresponding JLabel button.
      */
-    public void eval() {
-
-//        for (List<Integer> i : solver.movesMade) {
-//            for (int j : i) {
-//                System.out.print(j + " ");
-//            }
-//            System.out.println();
-//        }
+    public int eval() {
+int ctr = 0;
         for (int y = 0; y < rc; y++) {
             for (int x = 0; x < rc; x++) {
                 Cell cell = minefield.getCell(XYto1D(y, x));
@@ -329,24 +387,8 @@ public class MinefieldGUI extends MouseAdapter {
                     lis.add(y);
                     lis.add(x);
                     String stat = cell.getStatus().toLowerCase();
-//                    var val = -1;
-//                    try {
-//                        val = Integer.parseInt(minefield.getCell(minefield.XYto1D(y, x)).symbol);
-//                    } catch (Exception e) {
-//                    } finally {
-////                        for(List<Integer> row : closeCells(new Integer[]{y, x})){
-////                            if(minefield.board[minefield.XYto1D(row.get(0), row.get(1))].getRevealed()){
-////                                solver.addKnowledge(new Integer[]{row.get(0), row.get(1)}, closeClosedCells(new Integer[]{row.get(0), row.get(1)}), val);
-////                            }
-////                        }
-//                        if (val != -1) {
-////                            System.out.printf("(y,x)->(%d,%d) value=%s\n",y,x,stat);
-//                            solver.addKnowledge(new Integer[]{y, x}, val);}
-//                    }
-                    if(!movesMade.contains(Arrays.asList(y,x))){
-                        movesMade.add(Arrays.asList(y, x));
-                        solverEval(x,y,minefield,solver);
-                    }
+
+
                     if (stat.equals("m")) {
                         arr.get(XYto1D(y, x)).getLabel().setText("  M");
 
@@ -387,6 +429,7 @@ public class MinefieldGUI extends MouseAdapter {
 
                     arr.get(XYto1D(y, x)).getLabel().setText("  ");
                     if ((x + y) % 2 == 0) arr.get(XYto1D(y, x)).getLabel().setBackground(Color.green);
+                    ctr++;
                 }
 
                 arr.get(XYto1D(y, x)).getLabel().repaint();
@@ -396,16 +439,9 @@ public class MinefieldGUI extends MouseAdapter {
 
 
         }
+        return ctr;
     }
 
-    /**
-     * Retrieves the value of the "game" variable.
-     *
-     * @return true if the game is active, false otherwise
-     */
-    public boolean getGame() {
-        return game;
-    }
 
     /**
      * Performs a click action on the game board.
@@ -416,24 +452,30 @@ public class MinefieldGUI extends MouseAdapter {
      */
     public void doClick(int x, int y, boolean rightClick) {
         System.out.printf("Move made was (x,y)->(%d,%d) \n", x, y);
-        movesMade.add(Arrays.asList(y, x));
+
         if (rightClick) {
             // process right click
             if (count == 0) {
                 setupStart(x, y);
             } else {
-                lab1.setText(String.valueOf(minefield.flags));
+                flagsLabel.setText(String.valueOf(minefield.flags));
                 minefield.guess(y, x, true);
-                lab1.setText(String.valueOf(minefield.flags));
-                //        while(true){}
-                //        while(true){}
-                solverEval(x, y, minefield, solver);
-                movesMade.add(Arrays.asList(x, y));
-                eval();
+                System.out.println(minefield.flags);
+                if (minefield.flags == 0) {
+                    panel3.removeAll();
+                        panel3.add(new JLabel("You Won"));
+
+                    panel3.add(ai);
+                    panel3.add(reset);
+                    frame.validate();
+                    frame.repaint();
+                }
+                flagsLabel.setText(String.valueOf(minefield.flags));
+
+
 
                 this.minefield.printMinefield();
                 System.out.println();
-                this.minefield.printDebugMinefield();
             }
         } else {
 
@@ -443,79 +485,52 @@ public class MinefieldGUI extends MouseAdapter {
             } else {
                 System.out.printf("(%d,%d)\n", x, y);
                 if (!minefield.guess(y, x, false)) {
-                    eval();
+                    System.out.println(minefield.flags);
+                    if (minefield.flags == 0) {
+                        System.out.println("You win");
+                        panel3.removeAll();
+                        panel3.add(new JLabel("You Won"));
 
-                    int ctr = minefield.nearbyHidden(new int[]{y, x});
-                solverEval(x,y,minefield,solver);
+                    panel3.add(ai);
+                    panel3.add(reset);
+
+                        frame.validate();
+                        frame.repaint();
+                    }
+
                     this.minefield.printMinefield();
-                    this.minefield.printDebugMinefield();
                 } else {
                     System.out.println("Game over");
                     game = false;
-                    frame.dispose();
+                    panel3.removeAll();
+                    panel3.add(new JLabel("Game Over"));
+                    frame.remove(panel);
+                    panel3.add(ai);
+                    panel3.add(reset);
+                    frame.validate();
+                    frame.repaint();
                 }
             }
         }
-        eval();
+        solverEval(x,y,minefield,solver);
+        unopened =eval();
+//        solver.printKnowledge();
     }
 
     static void solverEval(int x, int y, Minefield minefield, Ai solver) {
-        if (minefield.getCell(minefield.XYto1D(y, x)).getRevealed()) {
+        if (minefield.board[minefield.XYto1D(y, x)].getRevealed()) {
             var val = -1;
             try {
                 val = Integer.parseInt(minefield.getCell(minefield.XYto1D(y, x)).symbol);
             } catch (Exception e) {
             } finally {
-//                        for(List<Integer> row : closeCells(new Integer[]{y, x})){
-//                            if(minefield.board[minefield.XYto1D(row.get(0), row.get(1))].getRevealed()){
-//                                solver.addKnowledge(new Integer[]{row.get(0), row.get(1)}, closeClosedCells(new Integer[]{row.get(0), row.get(1)}), val);
-//                            }
-//                        }
-                if (val != -1) {
-                    solver.addKnowledge(new Integer[]{y, x}, val);
-
-                }
+                if (val != -1) solver.addKnowledge(new Integer[]{y, x}, val);
 
             }
         }
     }
 
-    /**
-     * Returns a list of closed cells surrounding the given cell.
-     *
-     * @param cell the coordinates of the cell as an array [x, y]
-     * @return a list of closed cells surrounding the given cell
-     */
-    public ArrayList<List<Integer>> closeClosedCells(Integer[] cell) {
-        ArrayList<List<Integer>> closedCells = new ArrayList<>();
-        for (int i = cell[0] - 1; i < cell[0] + 2; i++) {
-            for (int j = cell[1] - 1; j < cell[1] + 2; j++) {
-                if (cell[0] != i || cell[1] != j) {
-                    if (i >= 0 && i < rc && j >= 0 && j < rc) {
-                        int x = minefield.XYto1D(i, j);
-                        if (!minefield.getCell(minefield.XYto1D(i, j)).getRevealed())
-                            closedCells.add(new ArrayList<>(Arrays.asList(i, j)));
-                    }
-                }
-            }
-        }
-        return closedCells;
-    }
 
-    public ArrayList<List<Integer>> closeCells(Integer[] cell) {
-        ArrayList<List<Integer>> closedCells = new ArrayList<>();
-        for (int i = cell[0] - 1; i < cell[0] + 2; i++) {
-            for (int j = cell[1] - 1; j < cell[1] + 2; j++) {
-                if (cell[0] != i || cell[1] != j) {
-                    if (i >= 0 && i < rc && j >= 0 && j < rc) {
-                        int x = minefield.XYto1D(i, j);
-                        closedCells.add(new ArrayList<>(Arrays.asList(i, j)));
-                    }
-                }
-            }
-        }
-        return closedCells;
-    }
 
     private void setupStart(int x, int y) {
         minefield.createMines(x, y, flags);
@@ -527,9 +542,8 @@ public class MinefieldGUI extends MouseAdapter {
 //        while(true){}
         for (int i = 0; i < rc; i++) {
             for (int j = 0; j < rc; j++) {
-                solverEval(j,i,minefield,solver);
+//                solverEval(j, i, minefield, solver);
                 if (minefield.getCell(minefield.XYto1D(i, j)).getRevealed()) {
-                    movesMade.add(Arrays.asList(i,j));
                     var val = -1;
                     try {
                         val = Integer.parseInt(minefield.getCell(minefield.XYto1D(i, j)).symbol);
@@ -547,7 +561,7 @@ public class MinefieldGUI extends MouseAdapter {
                 }
             }
         }
-        eval();
+        unopened = eval();
 
 
 //        int ctr = minefield.nearbyMines(new int[]{x, y});

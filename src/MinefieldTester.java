@@ -288,4 +288,107 @@ public class MinefieldTester {
 //        assertNull(safe);
 
     }
+    @Test
+    public void test3() {
+        ArrayList<List<Integer>> closedCells = new ArrayList<>();
+        closedCells.add(Arrays.asList(1, 6));
+        closedCells.add(Arrays.asList(2, 6));
+        closedCells.add(Arrays.asList(3, 6));
+        closedCells.add(Arrays.asList(1, 7));
+        closedCells.add(Arrays.asList(2, 7));
+        closedCells.add(Arrays.asList(2, 4));
+        closedCells.add(Arrays.asList(3, 4));
+        closedCells.add(Arrays.asList(4, 2));
+        closedCells.add(Arrays.asList(4, 0));
+        closedCells.add(Arrays.asList(4, 7));
+        closedCells.add(Arrays.asList(4, 8));
+        closedCells.add(Arrays.asList(7, 4));
+        closedCells.add(Arrays.asList(8, 4));
+        closedCells.add(Arrays.asList(9, 4));
+        closedCells.add(Arrays.asList(7, 7));
+        closedCells.add(Arrays.asList(8, 8));
+        closedCells.add(Arrays.asList(9, 8));
+        closedCells.add(Arrays.asList(8, 9));
+        rc = 10;
+        flags = 18;
+        setUp(closedCells);
+        minefield.revealStart(0, 0);
+        minefield.printMinefield();
+        minefield.printDebugMinefield();
+//        while(true){}
+        for (int i = 0; i < rc; i++) {
+            for (int j = 0; j < rc; j++) {
+                if (minefield.getCell(minefield.XYto1D(i, j)).getRevealed()) {
+                    makeMove(i, j);
+                }
+            }
+        }
+//        field.printDebugMinefield();
+
+        List<Integer> safe = solver.makeSafeMove();
+        assertEquals(Arrays.asList(5,2),safe);
+        minefield.guess(safe.get(1), safe.get(0), false);
+        makeMove(safe.get(1), safe.get(0));
+        safe = solver.makeSafeMove();
+        assertNull(safe);
+        safe = solver.makeRandomMove();
+        assertEquals(Arrays.asList(0, 3), safe);
+        minefield.printMinefield();
+        assertTrue(minefield.guess(safe.get(1), safe.get(0), false));
+        makeMove(safe.get(1), safe.get(0));
+
+        System.out.println();
+        minefield.printMinefield();
+//        minefield.guess(safe.get(1), safe.get(0), false);
+//        makeMove(safe.get(0), safe.get(1));
+//        safe = solver.makeSafeMove();
+//        assertNull(safe);
+
+    }
+    @Test
+    public void test4() {
+        ArrayList<List<Integer>> closedCells = new ArrayList<>();
+        closedCells.add(Arrays.asList(1, 2));
+        closedCells.add(Arrays.asList(2, 2));
+        closedCells.add(Arrays.asList(0, 2));
+        closedCells.add(Arrays.asList(3, 0));
+        rc = 14;
+        flags = 4;
+        setUp(closedCells);
+        minefield.revealStart(0, 0);
+//        minefield.printDebugMinefield();
+//        while(true){}
+        for (int i = 0; i < rc; i++) {
+            for (int j = 0; j < rc; j++) {
+                if (minefield.getCell(minefield.XYto1D(i, j)).getRevealed()) {
+                    makeMove(i, j);
+                }
+            }
+        }
+//        field.printDebugMinefield();
+
+        List<Integer> safe = solver.makeSafeMove();
+        assertEquals(Arrays.asList(2,3),safe);
+        minefield.guess(safe.get(1), safe.get(0), false);
+        makeMove(safe.get(1), safe.get(0));
+        safe = solver.makeSafeMove();
+
+//        minefield.printMinefield();
+        assertEquals(Arrays.asList(3,2),safe);
+//        minefield.printMinefield();
+        minefield.guess(safe.get(1), safe.get(0), false);
+        makeMove(safe.get(1), safe.get(0));
+
+        safe = solver.makeSafeMove();
+
+
+        minefield.printMinefield();
+        assertEquals(Arrays.asList(4,3),safe);
+//        minefield.guess(safe.get(1), safe.get(0), false);
+//        makeMove(safe.get(0), safe.get(1));
+//        safe = solver.makeSafeMove();
+//        assertNull(safe);
+
+    }
+
 }

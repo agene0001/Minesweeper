@@ -1,5 +1,6 @@
 import edu.princeton.cs.algs4.Queue;
 
+import javax.swing.*;
 import java.util.*;
 
 //agene001
@@ -25,6 +26,7 @@ public class Minefield {
     static int cols;
     int flags;
     Cell[] board;
+    Set<List<Integer>> mines = new HashSet<>();
 
     public Minefield(int rows, int columns, int flags) {
         //initzializer
@@ -61,6 +63,9 @@ public class Minefield {
         }
         evaluateField();
 
+    }
+    public Set<List<Integer>> getMines() {
+        return mines;
     }
 
     /**
@@ -164,8 +169,11 @@ public class Minefield {
             //checks if mine is placed on starting coordinate
             if ((a == x && b == y) || (a + 1 == x && b == y) || (a - 1 == x && b == y) || (a + 1 == x && b + 1 == y) || (a + 1 == x && b - 1 == y) || (a - 1 == x && b + 1 == y) || (a - 1 == x && b - 1 == y) || (a == x && b + 1 == y) || (a == x && b - 1 == y)) {
             } else {
-                board[XYto1D(b, a)].setStatus("M");
-                mines--;
+                if(!board[XYto1D(b, a)].getStatus().equalsIgnoreCase("M")) {
+                    board[XYto1D(b, a)].setStatus("M");
+                    this.mines.add(Arrays.asList(b, a));
+                    mines--;
+                }
 
             }
         }
@@ -204,7 +212,7 @@ public class Minefield {
                     }
                 }
             } else if (board[XYto1D(x, y)].getStatus().equals("0")) {
-                revealZeroes(x, y);
+                revealZeroes(y, x);
                 return false;
             } else if (board[XYto1D(x, y)].getStatus().toLowerCase().equals("m"))
                 return true;
