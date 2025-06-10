@@ -66,4 +66,36 @@ These functions are used to make a move given the current knowledge base. `makeS
 
 The `AI` class provides an AI player in a game of minesweeper through systematic inferences about the state of the game board. It smartly navigates the game, making safe moves where possible and educated guesses when necessary.
 
+✅ To-Do (Future Improvements)
+🧠 Integrate Probabilistic Reasoning AI
+To make the AI more robust, especially in situations where deterministic logic doesn't provide a clear next move, we plan to experiment with the following:
+🔍 1. Bayesian Inference Module
+Implement a Bayesian model to calculate the posterior probability of a cell being a mine, given the known constraints.
+
+
+Use observed clue numbers and current revealed board state to update the probability distribution over unrevealed cells.
+
+
+Select the next move based on minimum estimated risk (lowest mine probability).
+
+
+Optionally use PyMC or a custom inference engine.
+
+
+🎲 2. Monte Carlo Simulation Engine
+Simulate thousands of valid mine configurations that match current board knowledge.
+
+
+For each simulation, track how often each unrevealed cell is a mine.
+
+
+Use empirical frequencies to estimate probability and select the cell with lowest mine occurrence rate.
+
+
+This approach can handle uncertainty effectively and allows the AI to make smarter guesses.
+
+
+
+💡 These approaches would significantly increase the AI's capability, especially in late-game or ambiguous board states, and showcase a deeper application of statistical reasoning and machine learning principles.
+
 Made By: Felix Agene
